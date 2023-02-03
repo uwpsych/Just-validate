@@ -721,6 +721,10 @@ class JustValidate {
           return;
         }
 
+        if (isInvalidOrEmptyString(elemValue)) {
+          return;
+        }
+
         const result = fieldRule.validator(
           elemValue as string | boolean,
           this.getCompatibleFields()
