@@ -368,6 +368,39 @@ class JustValidate {
 
     switch (fieldRule.rule) {
       case Rules.Required: {
+        if (fieldRule.validator !== undefined) {
+          if (typeof fieldRule.validator !== 'function') {
+            console.error(
+              `Validator for ${fieldRule.rule} rule for [${key}] field should be a function.`
+            );
+            this.setFieldInvalid(key, fieldRule);
+            return;
+          }
+
+          const result = fieldRule.validator(
+            elemValue as string | boolean,
+            this.getCompatibleFields()
+          );
+
+          if (typeof result !== 'boolean') {
+            console.error(
+              `Validator return value for [${key}] field should be boolean It will be cast to boolean.`
+            );
+          }
+
+          const ruleIndex = this.fields[key].rules.indexOf(fieldRule);
+          if (!result) {
+            this.fields[key].rules.slice(ruleIndex + 1).map((rule) => {
+              rule.isActive = false;
+            });
+            return;
+          } else {
+            this.fields[key].rules.slice(ruleIndex + 1).map((rule) => {
+              rule.isActive = true;
+            });
+          }
+        }
+
         if (isEmpty(elemValue)) {
           this.setFieldInvalid(key, fieldRule);
         }
@@ -814,7 +847,7 @@ class JustValidate {
     field.isValid = true;
     const promises: Promise<any>[] = [];
     [...field.rules].forEach((rule) => {
-      if (!field.isValid) {
+      if (!field.isValid || rule.isActive === false) {
         return;
       }
 
