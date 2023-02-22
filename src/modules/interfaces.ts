@@ -105,6 +105,7 @@ export interface FieldConfigInterface
     >
   > {
   successMessage?: string | CustomMessageFuncType;
+  validateOnBlur?: boolean;
 }
 
 export interface FieldInterface {

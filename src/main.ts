@@ -1006,7 +1006,10 @@ class JustValidate {
     this.addListener('submit', this.form, this.formSubmitHandler);
   }
 
-  handleFieldChange = (target: HTMLInputElement): void => {
+  handleFieldEvent = (
+    target: HTMLInputElement,
+    afterInputChanged = true
+  ): void => {
     let foundKey;
 
     for (const key in this.fields) {
@@ -1023,10 +1026,13 @@ class JustValidate {
     }
 
     this.fields[foundKey].touched = true;
-    this.validateField(foundKey, true);
+    this.validateField(foundKey, afterInputChanged);
   };
 
-  handleGroupChange = (target: HTMLInputElement): void => {
+  handleGroupEvent = (
+    target: HTMLInputElement,
+    afterInputChanged = true
+  ): void => {
     let foundKey;
 
     for (const key in this.groupFields) {
@@ -1043,16 +1049,18 @@ class JustValidate {
     }
 
     this.groupFields[foundKey].touched = true;
-    this.validateGroup(foundKey, true);
+    this.validateGroup(foundKey, afterInputChanged);
   };
 
-  handlerChange = (ev: Event): void => {
+  handlerEvent = (ev: Event): void => {
     if (!ev.target) {
       return;
     }
 
-    this.handleFieldChange(ev.target as HTMLInputElement);
-    this.handleGroupChange(ev.target as HTMLInputElement);
+    const afterInputChanged = ev.type !== 'blur';
+
+    this.handleFieldEvent(ev.target as HTMLInputElement, afterInputChanged);
+    this.handleGroupEvent(ev.target as HTMLInputElement);
 
     this.renderErrors();
   };
@@ -1138,7 +1146,11 @@ class JustValidate {
       config,
     };
 
-    this.setListeners(elem);
+    this.setChangeListeners(elem);
+
+    if (config?.validateOnBlur) {
+      this.setListeners(elem, 'blur', this.handlerEvent);
+    }
 
     // if we add field after submitting the form we should validate again
     if (this.isSubmitted || this.globalConfig.validateBeforeSubmitting) {
@@ -1162,7 +1174,7 @@ class JustValidate {
     }
 
     const type = this.getListenerType(this.fields[key].elem.type);
-    this.removeListener(type, this.fields[key].elem, this.handlerChange);
+    this.removeListener(type, this.fields[key].elem, this.handlerEvent);
     this.clearErrors();
 
     delete this.fields[key];
@@ -1185,7 +1197,7 @@ class JustValidate {
 
     this.groupFields[key].elems.forEach((elem) => {
       const type = this.getListenerType(elem.type);
-      this.removeListener(type, elem, this.handlerChange);
+      this.removeListener(type, elem, this.handlerEvent);
     });
 
     this.clearErrors();
@@ -1248,7 +1260,7 @@ class JustValidate {
     };
 
     inputs.forEach((input) => {
-      this.setListeners(input);
+      this.setChangeListeners(input);
     });
 
     return this;
@@ -1270,10 +1282,18 @@ class JustValidate {
     }
   }
 
-  setListeners(elem: HTMLInputElement): void {
+  setListeners(
+    elem: HTMLInputElement,
+    type: string,
+    handler: (ev: Event) => void
+  ): void {
+    this.removeListener(type, elem, handler);
+    this.addListener(type, elem, handler);
+  }
+
+  setChangeListeners(elem: HTMLInputElement): void {
     const type = this.getListenerType(elem.type);
-    this.removeListener(type, elem, this.handlerChange);
-    this.addListener(type, elem, this.handlerChange);
+    this.setListeners(elem, type, this.handlerEvent);
   }
 
   clearFieldLabel(key: string): void {
