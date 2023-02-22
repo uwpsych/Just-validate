@@ -57,6 +57,7 @@ export interface FieldRuleInterface {
     errorMessage?: string | CustomMessageFuncType;
     validator?: ValidatorFuncType;
     value?: FieldRuleValueType;
+    isActive?: boolean;
     plugin?: (value: string | boolean, context: FieldsInterface) => boolean;
 }
 export interface GroupRuleInterface {
