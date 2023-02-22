@@ -4,4 +4,3 @@ node_modules
 app.yaml
 yarn-error.log
 coverage
-dist
